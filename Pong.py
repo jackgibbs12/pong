@@ -14,11 +14,23 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Pong")
 
 
-class Paddle():
-    def __init__(self, xIn, paddleIn):
+class Paddle(pygame.sprite.Sprite):
+    def __init__(self, xIn,yIn, paddleIn):
+        super().__init__()
+
+        #Attribute to store whether paddle is number 1 or 2
         self.paddle = paddleIn
-        self.x = xIn
-        self.y = 0
+
+        #Draw the paddle as a rectangle and set its initial x and y position
+        self.image = pygame.Surface([20,80])
+        self.image.fill(white)
+        self.image.set_colorkey(white)
+        
+        pygame.draw.rect(self.image, (255,255,255), [0, 0, 20, 80])
+        
+        self.rect = self.image.get_rect()
+        self.rect.x = xIn
+        self.rect.y = yIn
 
 
     def move(self):
@@ -30,90 +42,105 @@ class Paddle():
 
         if self.paddle == 1:
             #If down key is pressed, move the paddle down by 10 providing the paddle is not at the bottom
-            if key[pygame.K_DOWN] and self.y < screen_height:
-                self.y +=10
+            if key[pygame.K_DOWN] and self.rect.y < screen_height:
+                self.rect.y += 10
 
             #If up key is pressed, move the paddle up by 10 providing the paddle is not at the top
-            if key[pygame.K_UP] and self.y >0:
-                self.y -=10
+            if key[pygame.K_UP] and self.rect.y > 0:
+                self.rect.y -= 10
         else:
             #If down key is pressed, move the paddle down by 10 providing the paddle is not at the bottom
-            if key[pygame.K_s] and self.y < screen_height:
-                self.y +=10
+            if key[pygame.K_s] and self.rect.y < screen_height:
+                self.rect.y += 10
 
             #If up key is pressed, move the paddle up by 10 providing the paddle is not at the top
-            if key[pygame.K_w] and self.y >0:
-                self.y -=10
-            
+            if key[pygame.K_w] and self.rect.y > 0:
+                self.rect.y -= 10            
 
 
-    def draw(self):
-        """
-        Method to draw the paddle to the screen
-        """
-        
-        #Draw the paddle to the screen with the corresponding x and y positions
-        rectangle = pygame.Rect(self.x, self.y, 20, 80)
-        pygame.draw.rect(screen, (255,255,255), rectangle)
-
-class Ball():
+class Ball(pygame.sprite.Sprite):
     def __init__(self):
-        self.x = 30
-        self.y = 30
-        self.velocity = [randint(4,8), randint(4,8)]
+        super().__init__()
+
+        #Draw the ball as a rectangle and set its initial x and y position
+        self.image = pygame.Surface([20,20])
+        self.image.fill(white)
+        self.image.set_colorkey(white)
+        
+        pygame.draw.rect(self.image, (253,253,253), [0, 0, 20, 20])
+        
+        self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = 0
+
+        #Set the velocity of the ball in the x and y direction randomly
+        self.velocity = [randint(2,4), randint(2,4)]
 
     def update(self):
         """
         Method to update the position of the ball
         """
         
-        self.x += self.velocity[0]
-        self.y += self.velocity[1]
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+
 
         #Check if the ball has hit the edge and change its direction
-        if self.x <=0:
-            self.velocity[0] = -self.velocity[0]
-        if self.x >=600:
-            self.velocity[0] = -self.velocity[0]
+        if self.rect.x <= 0:
+            self.velocity[0] = - self.velocity[0]
+        if self.rect.x >= 600:
+            self.velocity[0] = - self.velocity[0]
 
-        if self.y <=0:
-            self.velocity[1] = -self.velocity[1]
-        if self.y >=800:
-            self.velocity[1] = -self.velocity[1]
+        if self.rect.y <= 0:
+            self.velocity[1] = - self.velocity[1]
+        if self.rect.y >= 800:
+            self.velocity[1] = - self.velocity[1]
 
-    def draw(self):
+    def bounce(self):
         """
-        Method to draw the ball to the screen
+        Method to handle when the ball comes into contact with a paddle
         """
         
-        pygame.draw.circle(screen,(255,255,255),(self.x,self.y),10)
+        self.velocity[0] = -self.velocity[0]
+        self.velocity[1] = randint(-2,2)
+
         
-        
+white = (254,254,254)      
         
 #Instantiate two paddle objects with corresponding x values, and a ball object
-paddle1 = Paddle(30, 1)
-paddle2 = Paddle(550, 2)
-
+paddle1 = Paddle(30, 200, 1)
+paddle2 = Paddle(550,600, 2)
 ball = Ball()
 
+#Add the paddles and the ball to a list of all sprites
+all_sprites_list = pygame.sprite.Group()
+all_sprites_list.add(paddle1)
+all_sprites_list.add(paddle2)
+all_sprites_list.add(ball)
 
 run = True
 while run:
+
+    #Draw the sprites to the screen
+    all_sprites_list.update()
+    all_sprites_list.draw(screen)
+   
+    pygame.display.flip()
+
+    #Move and draw the two paddles and the ball
+    paddle1.move()
+    paddle2.move()
+    ball.update()
+    
+    #Check if the ball has collided with a padle
+    if pygame.sprite.collide_mask(ball, paddle1) or pygame.sprite.collide_mask(ball, paddle2):
+        ball.bounce()
+
     #Fill the background and draw the middle line on the screen
-    screen.fill((0,0,0))
+    screen.fill((1,1,1))
     pygame.draw.line(screen, (255,255,255), [300, 0], [300, 800], 5)
 
-    #Move and draw the two paddles
-    paddle1.move()
-    paddle1.draw()
-    paddle2.move()
-    paddle2.draw()
-
-    #Move and draw the ball
-    ball.update()
-    ball.draw()
     
-    pygame.display.update()
     clock.tick(fps)
 
     #Check if the user exits the game
