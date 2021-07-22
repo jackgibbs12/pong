@@ -76,7 +76,7 @@ class Ball(pygame.sprite.Sprite):
         #Set the velocity of the ball in the x and y direction randomly
         self.velocity = [randint(2,4), randint(2,4)]
 
-    def update(self):
+    def updateBall(self, player1Score, player2Score):
         """
         Method to update the position of the ball
         """
@@ -88,13 +88,17 @@ class Ball(pygame.sprite.Sprite):
         #Check if the ball has hit the edge and change its direction
         if self.rect.x <= 0:
             self.velocity[0] = - self.velocity[0]
+            player2Score += 1
         if self.rect.x >= 600:
             self.velocity[0] = - self.velocity[0]
+            player1Score += 1
 
         if self.rect.y <= 0:
             self.velocity[1] = - self.velocity[1]
         if self.rect.y >= 800:
             self.velocity[1] = - self.velocity[1]
+
+        return player1Score, player2Score
 
     def bounce(self):
         """
@@ -103,8 +107,7 @@ class Ball(pygame.sprite.Sprite):
         
         self.velocity[0] = -self.velocity[0]
         self.velocity[1] = randint(-2,2)
-
-        
+      
 white = (254,254,254)      
         
 #Instantiate two paddle objects with corresponding x values, and a ball object
@@ -118,6 +121,10 @@ all_sprites_list.add(paddle1)
 all_sprites_list.add(paddle2)
 all_sprites_list.add(ball)
 
+#Initialise player scores
+player1Score = 0
+player2Score = 0 
+
 run = True
 while run:
 
@@ -130,7 +137,7 @@ while run:
     #Move and draw the two paddles and the ball
     paddle1.move()
     paddle2.move()
-    ball.update()
+    player1Score, player2Score = ball.updateBall(player1Score, player2Score)
     
     #Check if the ball has collided with a padle
     if pygame.sprite.collide_mask(ball, paddle1) or pygame.sprite.collide_mask(ball, paddle2):
